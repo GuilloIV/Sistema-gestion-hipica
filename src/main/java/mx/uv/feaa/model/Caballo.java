@@ -1,5 +1,7 @@
 package mx.uv.feaa.model;
 
+import mx.uv.feaa.enumeracion.SexoCaballo;
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package mx.uv.feaa.model;
+package mx.uv.feaa.enumeracion;
 
 /**
  * Enumeration que define los estados posibles de un participante

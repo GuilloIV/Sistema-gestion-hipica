@@ -158,6 +158,10 @@ public class Jinete {
                 new ArrayList<>(historialCarreras) : new ArrayList<>();
     }
 
+    public void agregarHistorial(HistorialCarrera historial) {
+        agregarHistorialCarrera(historial);
+    }
+
     public EstadisticasRendimiento getEstadisticas() {
         return estadisticas;
     }

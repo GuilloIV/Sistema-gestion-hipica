@@ -1,5 +1,7 @@
 package mx.uv.feaa.model;
 
+import mx.uv.feaa.enumeracion.EstadoParticipante;
+
 /**
  * Representa un participante en una carrera (combinación de jinete y caballo)
  */
@@ -39,7 +41,7 @@ public class Participante {
         }
 
         // Validar que el estado permita participar
-        if (!estado.puedeComperir()) {
+        if (!estado.puedeParticipar()) {
             return false;
         }
 

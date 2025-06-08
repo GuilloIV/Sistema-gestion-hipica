@@ -12,7 +12,7 @@ public class HistorialCarrera {
     private String hipodromo;
 
     // Constructor
-    public HistorialCarrera() {}
+    public HistorialCarrera(Carrera carrera, Integer posicion, LocalTime tiempo, LocalDate fecha) {}
 
     public HistorialCarrera(String carreraId, String nombreCarrera, Integer posicion,
                             LocalTime tiempo, LocalDate fecha, String hipodromo) {

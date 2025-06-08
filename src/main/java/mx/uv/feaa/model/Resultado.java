@@ -72,17 +72,29 @@ public class Resultado {
     }
 
     // Getters y Setters
-    public Carrera getCarrera() { return carrera; }
-    public void setCarrera(Carrera carrera) { this.carrera = carrera; }
+    public Carrera getCarrera() {
+        return carrera; }
+    public void setCarrera(Carrera carrera) {
+        this.carrera = carrera; }
 
-    public Map<Integer, Participante> getPosiciones() { return posiciones; }
-    public void setPosiciones(Map<Integer, Participante> posiciones) { this.posiciones = posiciones; }
+    public Map<Integer, Participante> getPosiciones() {
+        return posiciones; }
+    public void setPosiciones(Map<Integer, Participante> posiciones) {
+        this.posiciones = posiciones;
+    }
 
-    public Map<Participante, LocalTime> getTiemposOficiales() { return tiemposOficiales; }
-    public void setTiemposOficiales(Map<Participante, LocalTime> tiemposOficiales) { this.tiemposOficiales = tiemposOficiales; }
+    public Map<Participante, LocalTime> getTiemposOficiales() {
+        return tiemposOficiales;
+    }
+    public void setTiemposOficiales(Map<Participante, LocalTime> tiemposOficiales) {
+        this.tiemposOficiales = tiemposOficiales;
+    }
 
-    public LocalDate getFechaRegistro() { return fechaRegistro; }
-    public void setFechaRegistro(LocalDate fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+    public LocalDate getFechaRegistro() {
+        return fechaRegistro; }
+    public void setFechaRegistro(LocalDate fechaRegistro) {
+        this.fechaRegistro = fechaRegistro;
+    }
 
     @Override
     public String toString() {
