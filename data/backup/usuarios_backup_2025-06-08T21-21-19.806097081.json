@@ -1,0 +1,19 @@
+[ {
+  "id" : "USR_1749439279802_4632",
+  "nombreUsuario" : "Tuzco",
+  "email" : "tuzco@gmail.com",
+  "password" : "123",
+  "activo" : true,
+  "fechaRegistro" : "2025-06-08T21:21:19.802247573",
+  "ultimoAcceso" : "2025-06-08T21:21:19.802265725",
+  "tipoUsuario" : "Apostador",
+  "saldo" : 0.0,
+  "limiteApuesta" : 1000.0,
+  "historialApuestas" : [ ],
+  "totalApostado" : 0.0,
+  "totalGanado" : 0.0,
+  "apuestasRealizadas" : 0,
+  "ultimaActividad" : null,
+  "nombre" : "Claudio Crack",
+  "telefono" : "967654687"
+} ]

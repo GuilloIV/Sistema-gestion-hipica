@@ -1,0 +1,19 @@
+[ {
+  "id" : "USR_1749437876519_8610",
+  "nombreUsuario" : "Guillermo",
+  "email" : "icevr12@gmail.com",
+  "password" : "Cronos12",
+  "activo" : true,
+  "fechaRegistro" : "2025-06-08T20:57:56.519273121",
+  "ultimoAcceso" : "2025-06-08T20:57:56.519288376",
+  "tipoUsuario" : "Apostador",
+  "saldo" : 0.0,
+  "limiteApuesta" : 1000.0,
+  "historialApuestas" : [ ],
+  "totalApostado" : 0.0,
+  "totalGanado" : 0.0,
+  "apuestasRealizadas" : 0,
+  "ultimaActividad" : null,
+  "nombre" : "Guillermo Velazquez",
+  "telefono" : "2283653370"
+} ]

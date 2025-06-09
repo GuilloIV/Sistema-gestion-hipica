@@ -1,0 +1,19 @@
+[ {
+  "id" : "USR_1749438179593_9698",
+  "nombreUsuario" : "Guro",
+  "email" : "icevr12@gmail.com",
+  "password" : "123",
+  "activo" : true,
+  "fechaRegistro" : "2025-06-08T21:02:59.592773693",
+  "ultimoAcceso" : "2025-06-08T21:02:59.592807644",
+  "tipoUsuario" : "Apostador",
+  "saldo" : 0.0,
+  "limiteApuesta" : 1000.0,
+  "historialApuestas" : [ ],
+  "totalApostado" : 0.0,
+  "totalGanado" : 0.0,
+  "apuestasRealizadas" : 0,
+  "ultimaActividad" : null,
+  "nombre" : "Guillermo",
+  "telefono" : "2283653370"
+} ]
