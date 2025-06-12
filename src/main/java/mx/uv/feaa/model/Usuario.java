@@ -1,11 +1,13 @@
 package mx.uv.feaa.model;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-/**
- * Clase base abstracta que representa un usuario del sistema
- */
+}
 public abstract class Usuario {
     protected String id;
     protected String nombreUsuario;
@@ -22,6 +24,7 @@ public abstract class Usuario {
         this.fechaRegistro = LocalDateTime.now();
         this.ultimoAcceso = LocalDateTime.now();
     }
+
 
     // Constructor con parámetros básicos
     public Usuario(String nombreUsuario, String email) {
@@ -174,8 +177,7 @@ public abstract class Usuario {
     }
 
     public void setId(String id) {
-        this.id = id;
-    }
+        this.id = id;}
 
     public String getNombreUsuario() {
         return nombreUsuario;

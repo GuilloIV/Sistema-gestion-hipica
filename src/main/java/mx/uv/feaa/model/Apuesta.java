@@ -156,6 +156,8 @@ public abstract class Apuesta {
                 montoApostado, estado != null ? estado.getDescripcion() : "N/A", fechaApuesta);
     }
 
+
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
