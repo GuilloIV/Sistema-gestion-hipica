@@ -1,0 +1,18 @@
+[ {
+  "id" : "USR_1749530313549_9778",
+  "nombreUsuario" : "Guro",
+  "email" : "123@gmail.com",
+  "password" : "123",
+  "activo" : true,
+  "fechaRegistro" : "2025-06-09T22:38:33.549280017",
+  "ultimoAcceso" : "2025-06-09T22:38:33.549294862",
+  "tipoUsuario" : "Criador",
+  "licenciaCriador" : "543212435",
+  "fechaVigenciaLicencia" : "2026-06-09",
+  "caballos" : [ ],
+  "direccion" : "Avhola",
+  "telefono" : "544546313",
+  "nombreHaras" : "LaPotra",
+  "caballosRegistrados" : 0,
+  "caballosActivos" : 0
+} ]
