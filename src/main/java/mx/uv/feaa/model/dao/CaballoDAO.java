@@ -54,8 +54,8 @@ public class CaballoDAO implements IGenericDAO<Caballo, String> {
         try (Connection conn = ConexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            prepararStatement(stmt, caballo);
             stmt.setString(1, caballo.getIdCaballo());
+            prepararStatementParaInsert(stmt, caballo);
 
             return stmt.executeUpdate() > 0;
         }
@@ -71,7 +71,7 @@ public class CaballoDAO implements IGenericDAO<Caballo, String> {
         try (Connection conn = ConexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            prepararStatement(stmt, caballo);
+            prepararStatementParaUpdate(stmt, caballo);
             stmt.setString(8, caballo.getIdCaballo());
 
             return stmt.executeUpdate() > 0;
@@ -135,20 +135,46 @@ public class CaballoDAO implements IGenericDAO<Caballo, String> {
         if (ultimaCarrera != null) {
             caballo.setUltimaCarrera(ultimaCarrera.toLocalDate());
         }
+        // Si es null, se queda como null (valor por defecto)
 
         caballo.setCriadorId(rs.getString("criador_id"));
 
         return caballo;
     }
 
-    private void prepararStatement(PreparedStatement stmt, Caballo caballo) throws SQLException {
+    // Método separado para INSERT (incluye idCaballo como primer parámetro)
+    private void prepararStatementParaInsert(PreparedStatement stmt, Caballo caballo) throws SQLException {
+        stmt.setString(2, caballo.getNombre());
+        stmt.setDate(3, Date.valueOf(caballo.getFechaNacimiento()));
+        stmt.setString(4, caballo.getSexo().name());
+        stmt.setDouble(5, caballo.getPeso());
+        stmt.setString(6, caballo.getPedigri());
+
+        // Manejar ultimaCarrera que puede ser null
+        if (caballo.getUltimaCarrera() != null) {
+            stmt.setDate(7, Date.valueOf(caballo.getUltimaCarrera()));
+        } else {
+            stmt.setNull(7, Types.DATE);
+        }
+
+        stmt.setString(8, caballo.getCriadorId());
+    }
+
+    // Método separado para UPDATE (no incluye idCaballo)
+    private void prepararStatementParaUpdate(PreparedStatement stmt, Caballo caballo) throws SQLException {
         stmt.setString(1, caballo.getNombre());
         stmt.setDate(2, Date.valueOf(caballo.getFechaNacimiento()));
         stmt.setString(3, caballo.getSexo().name());
         stmt.setDouble(4, caballo.getPeso());
         stmt.setString(5, caballo.getPedigri());
-        stmt.setDate(6, caballo.getUltimaCarrera() != null ?
-                Date.valueOf(caballo.getUltimaCarrera()) : null);
+
+        // Manejar ultimaCarrera que puede ser null
+        if (caballo.getUltimaCarrera() != null) {
+            stmt.setDate(6, Date.valueOf(caballo.getUltimaCarrera()));
+        } else {
+            stmt.setNull(6, Types.DATE);
+        }
+
         stmt.setString(7, caballo.getCriadorId());
     }
 }

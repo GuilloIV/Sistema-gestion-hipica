@@ -13,6 +13,22 @@ public class HistorialCarrera {
     private LocalDate fecha;
     private String hipodromo;
 
+    // Constructor vacío
+    public HistorialCarrera() {
+    }
+
+    // Constructor con parámetros
+    public HistorialCarrera(String carrera_id, String caballo_id, String jinete_id,
+                            int posicion, LocalTime tiempo, LocalDate fecha, String hipodromo) {
+        this.carrera_id = carrera_id;
+        this.caballo_id = caballo_id;
+        this.jinete_id = jinete_id;
+        this.posicion = posicion;
+        this.tiempo = tiempo;
+        this.fecha = fecha;
+        this.hipodromo = hipodromo;
+    }
+
     // Métodos para determinar posición
     public boolean esVictoria() {
         return posicion == 1; // 1er lugar = victoria
@@ -22,7 +38,7 @@ public class HistorialCarrera {
         return posicion <= 3; // 1er, 2do o 3er lugar = colocación
     }
 
-    // Métodos existentes (getters, setters, etc.)
+    // Resto de los getters y setters...
     public String getIdHistorial() {
         return idHistorial;
     }

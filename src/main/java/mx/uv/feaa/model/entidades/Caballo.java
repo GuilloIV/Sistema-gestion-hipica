@@ -24,7 +24,7 @@ public class Caballo {
     }
 
     public Caballo(String idCaballo, String nombre, LocalDate fechaNacimiento,
-                   SexoCaballo sexo, double peso, String pedigri) {
+                   SexoCaballo sexo, double peso, String pedigri,LocalDate ultimaCarrera) {
         this();
         this.idCaballo = idCaballo;
         this.nombre = nombre;
@@ -32,6 +32,7 @@ public class Caballo {
         this.sexo = sexo;
         this.peso = peso;
         this.pedigri = pedigri;
+        this.ultimaCarrera = ultimaCarrera;
     }
 
     // Métodos de negocio
@@ -79,8 +80,14 @@ public class Caballo {
     public void setHistorialCarreras(List<HistorialCarrera> historialCarreras) {
         this.historialCarreras = new ArrayList<>(historialCarreras);
     }
-    public EstadisticasRendimiento getEstadisticas() { return estadisticas; }
-    public void setEstadisticas(EstadisticasRendimiento estadisticas) { this.estadisticas = estadisticas; }
+
+    public EstadisticasRendimiento obtenerEstadisticasCaballo() {
+        if (estadisticas == null) {
+            return new EstadisticasRendimiento();  // Retorna estadísticas vacías si no hay datos
+        }
+        return estadisticas;
+    }
+
 
     // Método para establecer relación por ID
     public void setCriadorById(String criadorId) {
@@ -91,5 +98,9 @@ public class Caballo {
     public String toString() {
         return String.format("Caballo{id='%s', nombre='%s', edad=%d, sexo=%s, peso=%.1f}",
                 idCaballo, nombre, getEdad(), sexo, peso);
+    }
+
+
+    public void agregarHistorial(HistorialCarrera historial) {
     }
 }

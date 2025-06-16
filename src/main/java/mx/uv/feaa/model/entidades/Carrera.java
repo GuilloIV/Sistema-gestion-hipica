@@ -65,15 +65,21 @@ public class Carrera {
                 Integer posicion = resultado.obtenerPosicion(String.valueOf(participante));
                 LocalTime tiempo = resultado.obtenerTiempo(String.valueOf(participante));
                 if (posicion != null && tiempo != null) {
-                    HistorialCarrera historial = new HistorialCarrera(
-                            idCarrera, nombre, posicion, tiempo, fecha, "Hipódromo Principal");
+                    HistorialCarrera historial = new HistorialCarrera();
+                    historial.setCarreraById(this.idCarrera);
+                    historial.setCaballoById(participante.getCaballo().getIdCaballo());
+                    historial.setJineteById(participante.getJinete().getIdJinete());
+                    historial.setPosicion(posicion);
+                    historial.setTiempo(tiempo);
+                    historial.setFecha(this.fecha);
+                    historial.setHipodromo("Hipódromo Principal"); // O usar this.hipodromo si existe
+
                     participante.getCaballo().agregarHistorial(historial);
                     participante.getJinete().agregarHistorial(historial);
                 }
             }
         }
     }
-
     public Map<String, Double> obtenerCuotasActuales() {
         Map<String, Double> cuotas = new HashMap<>();
         for (Participante participante : participantes) {
