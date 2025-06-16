@@ -9,6 +9,7 @@ public class Participante {
     private Caballo caballo;
     private Jinete jinete;
     private EstadoParticipante estado;
+    private Carrera carrera;
 
     public Participante(String idParticipante, int numeroCompetidor, double pesoAsignado,
                         Caballo caballo, Jinete jinete) {
@@ -132,6 +133,11 @@ public class Participante {
     }
 
 
-    public void setCarrera(Carrera carreraId) {
+    public Carrera getCarrera() {
+        return carrera;
+    }
+
+    public void setCarrera(Carrera carrera) {
+        this.carrera = carrera;
     }
 }

@@ -1,194 +1,167 @@
 package mx.uv.feaa.model.dao;
 
 import mx.uv.feaa.model.entidades.HistorialCarrera;
+import mx.uv.feaa.util.ConexionBD;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class HistorialCarreraDAO extends BaseDAOImpl<HistorialCarrera> implements IGenericDAO<HistorialCarrera> {
-    private static final String TABLA = "historial_carreras";
+public class HistorialCarreraDAO implements IGenericDAO<HistorialCarrera, String> {
+    private static final String TABLE_NAME = "HistorialCarrera";
+    private static final String SELECT_BY_ID = "SELECT * FROM " + TABLE_NAME + " WHERE idHistorial = ?";
+    private static final String SELECT_ALL = "SELECT * FROM " + TABLE_NAME;
+    private static final String INSERT = "INSERT INTO " + TABLE_NAME +
+            "(idHistorial, carrera_id, caballo_id, jinete_id, posicion, tiempo, fecha, hipodromo) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    private static final String UPDATE = "UPDATE " + TABLE_NAME + " SET " +
+            "carrera_id = ?, caballo_id = ?, jinete_id = ?, posicion = ?, " +
+            "tiempo = ?, fecha = ?, hipodromo = ? WHERE idHistorial = ?";
+    private static final String DELETE = "DELETE FROM " + TABLE_NAME + " WHERE idHistorial = ?";
 
     @Override
-    public HistorialCarrera obtenerPorId(String id) throws SQLException {
-        // En este caso, asumimos que el id es compuesto (caballo_id + carrera_id)
-        throw new UnsupportedOperationException("Método no implementado para historial");
+    public Optional<HistorialCarrera> getById(String id) throws SQLException {
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SELECT_BY_ID)) {
+
+            stmt.setString(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapearHistorial(rs));
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     @Override
-    public List<HistorialCarrera> obtenerTodos() throws SQLException {
-        String sql = "SELECT * FROM " + TABLA;
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    public List<HistorialCarrera> getAll() throws SQLException {
         List<HistorialCarrera> historiales = new ArrayList<>();
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            rs = stmt.executeQuery();
+        try (Connection conn = ConexionBD.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(SELECT_ALL)) {
 
             while (rs.next()) {
                 historiales.add(mapearHistorial(rs));
             }
-            return historiales;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
+        return historiales;
     }
 
     @Override
-    public boolean insertar(HistorialCarrera historial) throws SQLException {
-        String sql = "INSERT INTO " + TABLA + " (carrera_id, nombre_carrera, posicion, tiempo, fecha, hipodromo, " +
-                "caballo_id, jinete_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public boolean save(HistorialCarrera historial) throws SQLException {
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(INSERT)) {
 
-        Connection conn = null;
-        PreparedStatement stmt = null;
-
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setString(1, historial.getCarreraId());
-            stmt.setString(2, historial.getNombreCarrera());
-            stmt.setInt(3, historial.getPosicion());
-            stmt.setTime(4, Time.valueOf(historial.getTiempo()));
-            stmt.setDate(5, Date.valueOf(historial.getFecha()));
-            stmt.setString(6, historial.getHipodromo());
-            stmt.setString(7, historial.getCaballoId());
-            stmt.setString(8, historial.getJineteId());
+            prepararStatementParaInsertUpdate(stmt, historial);
+            stmt.setString(1, historial.getIdHistorial());
 
             return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
         }
     }
 
     @Override
-    public boolean actualizar(HistorialCarrera historial) throws SQLException {
-        String sql = "UPDATE " + TABLA + " SET posicion = ?, tiempo = ? " +
-                "WHERE carrera_id = ? AND caballo_id = ?";
+    public boolean update(HistorialCarrera historial) throws SQLException {
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(UPDATE)) {
 
-        Connection conn = null;
-        PreparedStatement stmt = null;
-
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setInt(1, historial.getPosicion());
-            stmt.setTime(2, Time.valueOf(historial.getTiempo()));
-            stmt.setString(3, historial.getCarreraId());
-            stmt.setString(4, historial.getCaballoId());
+            prepararStatementParaInsertUpdate(stmt, historial);
+            stmt.setString(8, historial.getIdHistorial());
 
             return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
         }
     }
 
     @Override
-    public boolean eliminar(String id) throws SQLException {
-        // En este caso, asumimos que el id es compuesto (caballo_id + carrera_id)
-        throw new UnsupportedOperationException("Método no implementado para historial");
+    public boolean delete(String id) throws SQLException {
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(DELETE)) {
+
+            stmt.setString(1, id);
+            return stmt.executeUpdate() > 0;
+        }
     }
 
     private HistorialCarrera mapearHistorial(ResultSet rs) throws SQLException {
-        return new HistorialCarrera(
-                rs.getString("carrera_id"),
-                rs.getString("nombre_carrera"),
-                rs.getInt("posicion"),
-                rs.getTime("tiempo").toLocalTime(),
-                rs.getDate("fecha").toLocalDate(),
-                rs.getString("hipodromo")
-        );
+        HistorialCarrera historial = new HistorialCarrera();
+
+        historial.setIdHistorial(rs.getString("idHistorial"));
+        historial.setCarreraById(rs.getString("carrera_id"));
+        historial.setCaballoById(rs.getString("caballo_id"));
+        historial.setJineteById(rs.getString("jinete_id"));
+        historial.setPosicion(rs.getInt("posicion"));
+
+        Time tiempo = rs.getTime("tiempo");
+        if (tiempo != null) {
+            historial.setTiempo(tiempo.toLocalTime());
+        }
+
+        Date fecha = rs.getDate("fecha");
+        if (fecha != null) {
+            historial.setFecha(fecha.toLocalDate());
+        }
+
+        historial.setHipodromo(rs.getString("hipodromo"));
+
+        return historial;
+    }
+
+    private void prepararStatementParaInsertUpdate(PreparedStatement stmt, HistorialCarrera historial)
+            throws SQLException {
+
+        stmt.setString(2, historial.getIdCarrera());
+        stmt.setString(3, historial.getIdCaballo());
+        stmt.setString(4, historial.getIdJinete());
+        stmt.setInt(5, historial.getPosicion());
+
+        if (historial.getTiempo() != null) {
+            stmt.setTime(6, Time.valueOf(historial.getTiempo()));
+        } else {
+            stmt.setNull(6, Types.TIME);
+        }
+
+        if (historial.getFecha() != null) {
+            stmt.setDate(7, Date.valueOf(historial.getFecha()));
+        } else {
+            stmt.setNull(7, Types.DATE);
+        }
+
+        stmt.setString(8, historial.getHipodromo());
     }
 
     // Métodos adicionales específicos para HistorialCarrera
-    public List<HistorialCarrera> obtenerPorCaballo(String caballoId) throws SQLException {
-        String sql = "SELECT * FROM " + TABLA + " WHERE caballo_id = ? ORDER BY fecha DESC";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    public List<HistorialCarrera> getByCaballoId(String idCaballo) throws SQLException {
+        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE caballo_id = ?";
         List<HistorialCarrera> historiales = new ArrayList<>();
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, caballoId);
-            rs = stmt.executeQuery();
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            while (rs.next()) {
-                historiales.add(mapearHistorial(rs));
+            stmt.setString(1, idCaballo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    historiales.add(mapearHistorial(rs));
+                }
             }
-            return historiales;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
+        return historiales;
     }
 
-    public List<HistorialCarrera> obtenerPorJinete(String jineteId) throws SQLException {
-        String sql = "SELECT * FROM " + TABLA + " WHERE jinete_id = ? ORDER BY fecha DESC";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    public List<HistorialCarrera> getByJineteId(String idJinete) throws SQLException {
+        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE jinete_id = ?";
         List<HistorialCarrera> historiales = new ArrayList<>();
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, jineteId);
-            rs = stmt.executeQuery();
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            while (rs.next()) {
-                historiales.add(mapearHistorial(rs));
+            stmt.setString(1, idJinete);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    historiales.add(mapearHistorial(rs));
+                }
             }
-            return historiales;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
-    }
-
-    public List<HistorialCarrera> obtenerPorCarrera(String carreraId) throws SQLException {
-        String sql = "SELECT * FROM " + TABLA + " WHERE carrera_id = ? ORDER BY posicion ASC";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-        List<HistorialCarrera> historiales = new ArrayList<>();
-
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, carreraId);
-            rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                historiales.add(mapearHistorial(rs));
-            }
-            return historiales;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
-        }
-    }
-
-    public boolean existeRegistro(String carreraId, String caballoId) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM " + TABLA + " WHERE carrera_id = ? AND caballo_id = ?";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, carreraId);
-            stmt.setString(2, caballoId);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-            return false;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
-        }
+        return historiales;
     }
 }
