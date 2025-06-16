@@ -1,156 +1,165 @@
 package mx.uv.feaa.model.dao;
 
-import mx.uv.feaa.model.dto.CriadorDTO;
-import mx.uv.feaa.util.DataAccessException;
-import mx.uv.feaa.util.DatabaseUtil;
+import mx.uv.feaa.model.entidades.Criador;
+import mx.uv.feaa.model.entidades.Usuario;
+import mx.uv.feaa.util.ConexionBD;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class CriadorDAO {
+public class CriadorDAO implements IGenericDAO<Criador, String> {
+    private static final String TABLE_NAME = "Criador";
+    private static final String ID_COLUMN = "idUsuario";
 
-    public Optional<CriadorDTO> findById(String id) throws SQLException {
-        String sql = """
-            SELECT u.id, u.nombre_usuario, u.email, u.password, u.activo,
-                   u.fecha_registro, u.ultimo_acceso, u.tipo_usuario,
-                   c.numero_ganado, c.numero_perdido
-            FROM Usuario u
-            INNER JOIN Criador c ON u.id = c.id
-            WHERE u.id = ? AND u.tipo_usuario = 'CRIADOR'
-        """;
+    @Override
+    public Optional<Criador> getById(String id) throws SQLException {
+        String sql = "SELECT u.*, c.* FROM " + TABLE_NAME + " c " +
+                "JOIN Usuario u ON c." + ID_COLUMN + " = u." + ID_COLUMN + " " +
+                "WHERE c." + ID_COLUMN + " = ?";
 
-        try (Connection conn = DatabaseUtil.getConnection();
+        try (Connection conn = ConexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, id);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(mapToCriadorDTO(rs));
+                    return Optional.of(mapearCriador(rs));
                 }
             }
         }
         return Optional.empty();
     }
 
-    public List<CriadorDTO> findAllActive() throws SQLException {
-        String sql = """
-            SELECT u.id, u.nombre_usuario, u.email, u.password, u.activo,
-                   u.fecha_registro, u.ultimo_acceso, u.tipo_usuario,
-                   c.numero_ganado, c.numero_perdido
-            FROM Usuario u
-            INNER JOIN Criador c ON u.id = c.id
-            WHERE u.activo = TRUE AND u.tipo_usuario = 'CRIADOR'
-            ORDER BY u.fecha_registro DESC
-        """;
+    @Override
+    public List<Criador> getAll() throws SQLException {
+        List<Criador> criadores = new ArrayList<>();
+        String sql = "SELECT u.*, c.* FROM " + TABLE_NAME + " c " +
+                "JOIN Usuario u ON c." + ID_COLUMN + " = u." + ID_COLUMN;
 
-        List<CriadorDTO> criadores = new ArrayList<>();
-        try (Connection conn = DatabaseUtil.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (Connection conn = ConexionBD.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
             while (rs.next()) {
-                criadores.add(mapToCriadorDTO(rs));
+                criadores.add(mapearCriador(rs));
             }
         }
         return criadores;
     }
 
-    public void save(CriadorDTO criador) throws SQLException {
-        DatabaseUtil.executeTransaction(() -> {
-            try (Connection conn = DatabaseUtil.getConnection()) {
-                // Guardar en Usuario
-                String sqlUsuario = """
-                    INSERT INTO Usuario (id, nombre_usuario, email, password, activo, 
-                                         fecha_registro, ultimo_acceso, tipo_usuario)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'CRIADOR')
-                    ON DUPLICATE KEY UPDATE
-                        nombre_usuario = VALUES(nombre_usuario),
-                        email = VALUES(email),
-                        password = VALUES(password),
-                        activo = VALUES(activo),
-                        ultimo_acceso = VALUES(ultimo_acceso)
-                """;
+    @Override
+    public boolean save(Criador criador) throws SQLException {
+        // Primero guardamos el usuario base
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        if (!usuarioDAO.save(criador)) {
+            return false;
+        }
 
-                try (PreparedStatement stmtUsuario = conn.prepareStatement(sqlUsuario)) {
-                    stmtUsuario.setString(1, criador.getId());
-                    stmtUsuario.setString(2, criador.getNombreUsuario());
-                    stmtUsuario.setString(3, criador.getEmail());
-                    stmtUsuario.setString(4, criador.getPassword());
-                    stmtUsuario.setBoolean(5, criador.isActivo());
+        // Luego guardamos los datos específicos del criador
+        String sql = "INSERT INTO " + TABLE_NAME + " (idUsuario, licenciaCriador, fechaVigenciaLicencia, " +
+                "direccion, telefono, nombreHaras) VALUES (?, ?, ?, ?, ?, ?)";
 
-                    if (criador.getFechaRegistro() != null) {
-                        stmtUsuario.setTimestamp(6, Timestamp.valueOf(criador.getFechaRegistro()));
-                    } else {
-                        stmtUsuario.setTimestamp(6, new Timestamp(System.currentTimeMillis()));
-                    }
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                    if (criador.getUltimoAcceso() != null) {
-                        stmtUsuario.setTimestamp(7, Timestamp.valueOf(criador.getUltimoAcceso()));
-                    } else {
-                        stmtUsuario.setNull(7, Types.TIMESTAMP);
-                    }
+            stmt.setString(1, criador.getIdUsuario());
+            stmt.setString(2, criador.getLicenciaCriador());
+            stmt.setDate(3, Date.valueOf(criador.getFechaVigenciaLicencia()));
+            stmt.setString(4, criador.getDireccion());
+            stmt.setString(5, criador.getTelefono());
+            stmt.setString(6, criador.getNombreHaras());
 
-                    stmtUsuario.executeUpdate();
-                }
-
-                // Guardar en Criador
-                String sqlCriador = """
-                    INSERT INTO Criador (id, numero_ganado, numero_perdido)
-                    VALUES (?, ?, ?)
-                    ON DUPLICATE KEY UPDATE
-                        numero_ganado = VALUES(numero_ganado),
-                        numero_perdido = VALUES(numero_perdido)
-                """;
-
-                try (PreparedStatement stmtCriador = conn.prepareStatement(sqlCriador)) {
-                    stmtCriador.setString(1, criador.getId());
-                    stmtCriador.setInt(2, criador.getNombreHaras());
-                    stmtCriador.setInt(3, criador.getNumeroPerdido());
-                    stmtCriador.executeUpdate();
-                }
-
-            } catch (SQLException e) {
-                throw new DataAccessException("Error guardando criador: " + e.getMessage(), e);
-            }
-        });
-    }
-
-    public void deleteById(String id) throws SQLException {
-        String sqlCriador = "DELETE FROM Criador WHERE id = ?";
-        String sqlUsuario = "DELETE FROM Usuario WHERE id = ? AND tipo_usuario = 'CRIADOR'";
-        try (Connection conn = DatabaseUtil.getConnection()) {
-            conn.setAutoCommit(false);
-            try (
-                    PreparedStatement stmt1 = conn.prepareStatement(sqlCriador);
-                    PreparedStatement stmt2 = conn.prepareStatement(sqlUsuario)
-            ) {
-                stmt1.setString(1, id);
-                stmt1.executeUpdate();
-                stmt2.setString(1, id);
-                stmt2.executeUpdate();
-                conn.commit();
-            } catch (SQLException e) {
-                conn.rollback();
-                throw e;
-            } finally {
-                conn.setAutoCommit(true);
-            }
+            return stmt.executeUpdate() > 0;
         }
     }
 
-    private CriadorDTO mapToCriadorDTO(ResultSet rs) throws SQLException {
-        CriadorDTO dto = new CriadorDTO();
-        dto.setId(rs.getString("id"));
-        dto.setNombreUsuario(rs.getString("nombre_usuario"));
-        dto.setEmail(rs.getString("email"));
-        dto.setPassword(rs.getString("password"));
-        dto.setActivo(rs.getBoolean("activo"));
-        dto.setFechaRegistro(rs.getTimestamp("fecha_registro").toLocalDateTime());
-        Timestamp ultimoAcceso = rs.getTimestamp("ultimo_acceso");
-        dto.setUltimoAcceso(ultimoAcceso != null ? ultimoAcceso.toLocalDateTime() : null);
-        dto.setNumeroGanado(rs.getInt("numero_ganado"));
-        dto.setNumeroPerdido(rs.getInt("numero_perdido"));
-        return dto;
+    @Override
+    public boolean update(Criador criador) throws SQLException {
+        // Actualizamos primero el usuario base
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        if (!usuarioDAO.update(criador)) {
+            return false;
+        }
+
+        // Luego actualizamos los datos específicos del criador
+        String sql = "UPDATE " + TABLE_NAME + " SET licenciaCriador = ?, fechaVigenciaLicencia = ?, " +
+                "direccion = ?, telefono = ?, nombreHaras = ? WHERE " + ID_COLUMN + " = ?";
+
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, criador.getLicenciaCriador());
+            stmt.setDate(2, Date.valueOf(criador.getFechaVigenciaLicencia()));
+            stmt.setString(3, criador.getDireccion());
+            stmt.setString(4, criador.getTelefono());
+            stmt.setString(5, criador.getNombreHaras());
+            stmt.setString(6, criador.getIdUsuario());
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    @Override
+    public boolean delete(String id) throws SQLException {
+        // Al tener DELETE CASCADE en la FK, solo necesitamos borrar el usuario
+        UsuarioDAO usuarioDAO = new UsuarioDAO();
+        return usuarioDAO.delete(id);
+    }
+
+    public boolean renovarLicencia(String idCriador, LocalDate nuevaFechaVigencia) throws SQLException {
+        String sql = "UPDATE " + TABLE_NAME + " SET fechaVigenciaLicencia = ? WHERE " + ID_COLUMN + " = ?";
+
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setDate(1, Date.valueOf(nuevaFechaVigencia));
+            stmt.setString(2, idCriador);
+
+            return stmt.executeUpdate() > 0;
+        }
+    }
+
+    private Criador mapearCriador(ResultSet rs) throws SQLException {
+        // Mapear datos de Usuario
+        Usuario usuario = new Usuario(
+                rs.getString(ID_COLUMN),
+                rs.getString("nombreUsuario"),
+                rs.getString("email"),
+                rs.getString("password")
+        ) {
+            @Override
+            public String getTipoUsuarioEspecifico() {
+                return "";
+            }
+        };
+
+        usuario.setActivo(rs.getBoolean("activo"));
+        usuario.setFechaRegistro(rs.getTimestamp("fechaRegistro").toLocalDateTime());
+
+        if (rs.getTimestamp("ultimoAcceso") != null) {
+            usuario.setUltimoAcceso(rs.getTimestamp("ultimoAcceso").toLocalDateTime());
+        }
+
+        // Mapear datos específicos de Criador
+        Criador criador = new Criador();
+        criador.setIdUsuario(usuario.getIdUsuario());
+        criador.setNombreUsuario(usuario.getNombreUsuario());
+        criador.setEmail(usuario.getEmail());
+        criador.setPassword(usuario.getPassword());
+        criador.setActivo(usuario.isActivo());
+        criador.setFechaRegistro(usuario.getFechaRegistro());
+        criador.setUltimoAcceso(usuario.getUltimoAcceso());
+
+        criador.setLicenciaCriador(rs.getString("licenciaCriador"));
+        criador.setFechaVigenciaLicencia(rs.getDate("fechaVigenciaLicencia").toLocalDate());
+        criador.setDireccion(rs.getString("direccion"));
+        criador.setTelefono(rs.getString("telefono"));
+        criador.setNombreHaras(rs.getString("nombreHaras"));
+
+        return criador;
     }
 }
-

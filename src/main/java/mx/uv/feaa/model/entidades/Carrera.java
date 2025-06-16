@@ -1,7 +1,6 @@
-package mx.uv.feaa.model;
+package mx.uv.feaa.model.entidades;
 
 import mx.uv.feaa.enumeracion.EstadoCarrera;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -9,11 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Representa una carrera de caballos
- */
 public class Carrera {
-    private String id;
+    private String idCarrera;
     private String nombre;
     private LocalDate fecha;
     private LocalTime hora;
@@ -24,76 +20,53 @@ public class Carrera {
     private int minimoParticipantes;
     private int maximoParticipantes;
 
-    // Constructor
-    public Carrera(String id, String nombre, LocalDate fecha, LocalTime hora, String distancia) {
-        this.id = id;
+    public Carrera(String idCarrera, String nombre, LocalDate fecha, LocalTime hora, String distancia) {
+        this.idCarrera = idCarrera;
         this.nombre = nombre;
         this.fecha = fecha;
         this.hora = hora;
         this.distancia = distancia;
         this.estado = EstadoCarrera.PROGRAMADA;
         this.participantes = new ArrayList<>();
-        this.minimoParticipantes = 4; // Mínimo reglamentario
-        this.maximoParticipantes = 20; // Máximo reglamentario
+        this.minimoParticipantes = 4;
+        this.maximoParticipantes = 20;
     }
 
-    /**
-     * Agrega un participante a la carrera
-     */
     public boolean agregarParticipante(Participante participante) {
-        if (!estado.permiteInscripciones()) {
+        if (!estado.permiteInscripciones() ||
+                participantes.size() >= maximoParticipantes ||
+                !participante.validarElegibilidad()) {
             return false;
         }
 
-        if (participantes.size() >= maximoParticipantes) {
+        if (participantes.stream().anyMatch(p -> p.getNumeroCompetidor() == participante.getNumeroCompetidor())) {
             return false;
-        }
-
-        if (!participante.validarElegibilidad()) {
-            return false;
-        }
-
-        // Verificar que no haya números duplicados
-        for (Participante p : participantes) {
-            if (p.getNumeroCompetidor() == participante.getNumeroCompetidor()) {
-                return false;
-            }
         }
 
         participantes.add(participante);
-
-        // Si se alcanza el mínimo, cambiar estado
         if (participantes.size() >= minimoParticipantes && estado == EstadoCarrera.PROGRAMADA) {
             estado = EstadoCarrera.INSCRIPCIONES_ABIERTAS;
         }
-
         return true;
     }
 
-    /**
-     * Valida que se cumplan las condiciones mínimas para la carrera
-     */
     public boolean validarCondicionesMinimas() {
         return participantes.size() >= minimoParticipantes &&
                 fecha.isAfter(LocalDate.now().minusDays(1)) &&
                 estado.estaActiva();
     }
 
-    /**
-     * Registra el resultado de la carrera
-     */
     public void registrarResultado(Resultado resultado) {
         if (estado == EstadoCarrera.EN_CURSO || estado == EstadoCarrera.APUESTAS_CERRADAS) {
             this.resultado = resultado;
             this.estado = EstadoCarrera.FINALIZADA;
 
-            // Actualizar historial de participantes
             for (Participante participante : participantes) {
-                Integer posicion = resultado.obtenerPosicion(participante);
-                LocalTime tiempo = resultado.obtenerTiempo(participante);
-
+                Integer posicion = resultado.obtenerPosicion(String.valueOf(participante));
+                LocalTime tiempo = resultado.obtenerTiempo(String.valueOf(participante));
                 if (posicion != null && tiempo != null) {
-                    HistorialCarrera historial = new HistorialCarrera(this, posicion, tiempo, fecha);
+                    HistorialCarrera historial = new HistorialCarrera(
+                            idCarrera, nombre, posicion, tiempo, fecha, "Hipódromo Principal");
                     participante.getCaballo().agregarHistorial(historial);
                     participante.getJinete().agregarHistorial(historial);
                 }
@@ -101,32 +74,18 @@ public class Carrera {
         }
     }
 
-    /**
-     * Obtiene las cuotas actuales (simulación básica)
-     */
     public Map<String, Double> obtenerCuotasActuales() {
         Map<String, Double> cuotas = new HashMap<>();
-
         for (Participante participante : participantes) {
-            // Cuota básica basada en rendimiento histórico
             EstadisticasRendimiento rendimiento = participante.obtenerRendimientoHistorico();
-            double cuota = calcularCuotaBasica(rendimiento);
-            cuotas.put(participante.getCaballo().getNombre(), cuota);
+            cuotas.put(participante.getCaballo().getNombre(), calcularCuotaBasica(rendimiento));
         }
-
         return cuotas;
     }
 
-    /**
-     * Calcula una cuota básica basada en el rendimiento
-     */
     private double calcularCuotaBasica(EstadisticasRendimiento rendimiento) {
-        if (rendimiento.getTotalCarreras() == 0) {
-            return 10.0; // Cuota por defecto para debutantes
-        }
-
+        if (rendimiento.getTotalCarreras() == 0) return 10.0;
         double porcentajeVictorias = rendimiento.getPorcentajeVictorias();
-
         if (porcentajeVictorias >= 40) return 2.5;
         else if (porcentajeVictorias >= 25) return 4.0;
         else if (porcentajeVictorias >= 15) return 6.0;
@@ -134,9 +93,6 @@ public class Carrera {
         else return 12.0;
     }
 
-    /**
-     * Inicia las apuestas para la carrera
-     */
     public boolean iniciarApuestas() {
         if (validarCondicionesMinimas() &&
                 (estado == EstadoCarrera.INSCRIPCIONES_ABIERTAS || estado == EstadoCarrera.PROGRAMADA)) {
@@ -146,9 +102,6 @@ public class Carrera {
         return false;
     }
 
-    /**
-     * Cierra las apuestas para la carrera
-     */
     public boolean cerrarApuestas() {
         if (estado == EstadoCarrera.APUESTAS_ABIERTAS) {
             estado = EstadoCarrera.APUESTAS_CERRADAS;
@@ -157,9 +110,6 @@ public class Carrera {
         return false;
     }
 
-    /**
-     * Inicia la carrera
-     */
     public boolean iniciarCarrera() {
         if (estado == EstadoCarrera.APUESTAS_CERRADAS && validarCondicionesMinimas()) {
             estado = EstadoCarrera.EN_CURSO;
@@ -168,34 +118,27 @@ public class Carrera {
         return false;
     }
 
-    // Getters y Setters
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
+    // Getters and Setters
+    public String getIdCarrera() { return idCarrera; }
+    public void setIdCarrera(String idCarrera) { this.idCarrera = idCarrera; }
     public String getNombre() { return nombre; }
     public void setNombre(String nombre) { this.nombre = nombre; }
-
     public LocalDate getFecha() { return fecha; }
     public void setFecha(LocalDate fecha) { this.fecha = fecha; }
-
     public LocalTime getHora() { return hora; }
     public void setHora(LocalTime hora) { this.hora = hora; }
-
     public String getDistancia() { return distancia; }
     public void setDistancia(String distancia) { this.distancia = distancia; }
-
     public EstadoCarrera getEstado() { return estado; }
     public void setEstado(EstadoCarrera estado) { this.estado = estado; }
-
-    public List<Participante> getParticipantes() { return participantes; }
-    public void setParticipantes(List<Participante> participantes) { this.participantes = participantes; }
-
+    public List<Participante> getParticipantes() { return new ArrayList<>(participantes); }
+    public void setParticipantes(List<Participante> participantes) {
+        this.participantes = participantes != null ? new ArrayList<>(participantes) : new ArrayList<>();
+    }
     public Resultado getResultado() { return resultado; }
     public void setResultado(Resultado resultado) { this.resultado = resultado; }
-
     public int getMinimoParticipantes() { return minimoParticipantes; }
     public void setMinimoParticipantes(int minimoParticipantes) { this.minimoParticipantes = minimoParticipantes; }
-
     public int getMaximoParticipantes() { return maximoParticipantes; }
     public void setMaximoParticipantes(int maximoParticipantes) { this.maximoParticipantes = maximoParticipantes; }
 
