@@ -35,7 +35,7 @@ public class Participante {
 
     public EstadisticasRendimiento obtenerRendimientoHistorico() {
         EstadisticasRendimiento rendimientoJinete = jinete.obtenerEstadisticas();
-        EstadisticasRendimiento rendimientoCaballo = caballo.obtenerRendimiento();
+        EstadisticasRendimiento rendimientoCaballo = caballo.obtenerEstadisticasCaballo();
 
         rendimientoJinete = rendimientoJinete != null ? rendimientoJinete : new EstadisticasRendimiento();
         rendimientoCaballo = rendimientoCaballo != null ? rendimientoCaballo : new EstadisticasRendimiento();
@@ -49,7 +49,7 @@ public class Participante {
 
     public int obtenerExperienciaCombinada() {
         EstadisticasRendimiento rendimientoJinete = jinete.obtenerEstadisticas();
-        EstadisticasRendimiento rendimientoCaballo = caballo.obtenerRendimiento();
+        EstadisticasRendimiento rendimientoCaballo = caballo.obtenerEstadisticasCaballo();
         int experienciaJinete = rendimientoJinete != null ? rendimientoJinete.getTotalCarreras() : 0;
         int experienciaCaballo = rendimientoCaballo != null ? rendimientoCaballo.getTotalCarreras() : 0;
         return experienciaJinete + experienciaCaballo;

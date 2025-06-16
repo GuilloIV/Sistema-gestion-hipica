@@ -120,7 +120,7 @@ public class Criador extends Usuario {
     public List<Caballo> obtenerCaballosPorEdad(int edadMinima, int edadMaxima) {
         return caballos.stream()
                 .filter(caballo -> {
-                    int edad = caballo.getEdadEnAnios();
+                    int edad = caballo.getEdad();
                     return edad >= edadMinima && edad <= edadMaxima;
                 })
                 .collect(Collectors.toList());

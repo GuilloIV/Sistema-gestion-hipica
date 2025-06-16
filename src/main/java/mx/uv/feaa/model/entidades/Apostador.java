@@ -1,7 +1,7 @@
 package mx.uv.feaa.model.entidades;
 
 import mx.uv.feaa.enumeracion.EstadoApuesta;
-import mx.uv.feaa.model.entidades.Usuario;
+
 
 import java.time.LocalDate;
 import java.util.ArrayList;
