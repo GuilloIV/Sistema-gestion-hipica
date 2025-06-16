@@ -248,6 +248,11 @@ public class Criador extends Usuario {
         this.caballosRegistrados = this.caballos.size();
         actualizarContadorActivos();
     }
+    public void setCaballosRegistrados(int caballosRegistrados) {
+        this.caballosRegistrados = caballosRegistrados;
+    }
+
+
 
     public String getDireccion() {
         return direccion;

@@ -5,20 +5,35 @@
     <version>1.0.0</version>
 
     <properties>
-        <maven.compiler.source>24</maven.compiler.source>
-        <maven.compiler.target>24</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.0</junit.version>
     </properties>
 
     <dependencies>
-        <!-- Conector MySQL -->
+
+        <!-- Jackson Core -->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>9.3.0</version>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.0</version>
         </dependency>
+
+        <!-- Soporte para Java 8 Date/Time -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.15.0</version>
+        </dependency>
+
         <!-- JUnit 5 para pruebas -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
@@ -28,36 +43,15 @@
     </dependencies>
 
     <build>
-
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-toolchains-plugin</artifactId>
-                <version>3.1.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>toolchain</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <toolchains>
-                        <jdk>
-                            <version>24</version>
-                        </jdk>
-                    </toolchains>
-                </configuration>
-            </plugin>
-
             <!-- Plugin para JavaDoc -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.0</version>
+                <version>3.6.0</version> <!-- Última versión estable -->
                 <configuration>
-                    <source>24</source>
-                    <doclint>none</doclint>
+                    <source>17</source>
+                    <doclint>none</doclint> <!-- Para evitar warnings -->
                 </configuration>
                 <executions>
                     <execution>
@@ -69,7 +63,7 @@
                 </executions>
             </plugin>
 
-            <!-- Plugin para compilación con Java 24 -->
+            <!-- Plugin para compilación -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -77,9 +71,7 @@
                 <configuration>
                     <source>24</source>
                     <target>24</target>
-                    <compilerArgs>
-                        <arg>--enable-preview</arg>
-                    </compilerArgs>
+                    <compilerArgs>--enable-preview</compilerArgs>
                 </configuration>
             </plugin>
 
@@ -97,14 +89,11 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin para ejecutar pruebas con JUnit 5 -->
+            <!-- Plugin para pruebas (JUnit 5) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.2</version>
-                <configuration>
-                    <argLine>--enable-preview</argLine>
-                </configuration>
             </plugin>
         </plugins>
     </build>
