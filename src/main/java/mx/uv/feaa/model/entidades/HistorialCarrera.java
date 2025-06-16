@@ -46,6 +46,8 @@ public class HistorialCarrera {
     public String getHipodromo() { return hipodromo; }
     public void setHipodromo(String hipodromo) { this.hipodromo = hipodromo; }
 
+
+
     @Override
     public String toString() {
         return String.format("%s - Posición: %d, Tiempo: %s (%s)",

@@ -1,6 +1,8 @@
 package mx.uv.feaa.model.entidades;
 
 import mx.uv.feaa.enumeracion.SexoCaballo;
+
+
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -16,7 +18,6 @@ public class Caballo {
     private LocalDate ultimaCarrera;
     private List<HistorialCarrera> historialCarreras;
     private EstadisticasRendimiento estadisticas;
-    private Criador criador;
 
     public Caballo() {
         this.historialCarreras = new ArrayList<>();
@@ -136,11 +137,7 @@ public class Caballo {
         return idCaballo != null ? idCaballo.hashCode() : 0;
     }
 
-    public Criador getCriador() {
-        return criador;
-    }
 
     public void setCriador(Criador criador) {
-        this.criador = criador;
     }
 }

@@ -1,229 +1,168 @@
 package mx.uv.feaa.model.dao;
 
 import mx.uv.feaa.model.entidades.EstadisticasRendimiento;
+import mx.uv.feaa.util.ConexionBD;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
-public class EstadisticasRendimientoDAO extends BaseDAOImpl<EstadisticasRendimiento> implements IGenericDAO<EstadisticasRendimiento> {
-    private static final String TABLA = "estadisticas_rendimiento";
+public class EstadisticasRendimientoDAO implements IGenericDAO<EstadisticasRendimiento, String> {
+
+    private static final String TABLA = "EstadisticasRendimiento";
 
     @Override
-    public EstadisticasRendimiento obtenerPorId(String id) throws SQLException {
-        String sql = "SELECT * FROM " + TABLA + " WHERE id = ?";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    public Optional<EstadisticasRendimiento> getById(String id) throws SQLException {
+        String sql = String.format("SELECT * FROM %s WHERE idEstadistica = ?", TABLA);
+        EstadisticasRendimiento estadistica = null;
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, id);
-            rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return mapearEstadisticas(rs);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    estadistica = mapearEstadistica(rs);
+                }
             }
-            return null;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
+
+        return Optional.ofNullable(estadistica);
     }
 
     @Override
-    public List<EstadisticasRendimiento> obtenerTodos() throws SQLException {
-        String sql = "SELECT * FROM " + TABLA;
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    public List<EstadisticasRendimiento> getAll() throws SQLException {
+        String sql = String.format("SELECT * FROM %s", TABLA);
         List<EstadisticasRendimiento> estadisticas = new ArrayList<>();
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            rs = stmt.executeQuery();
+        try (Connection conn = ConexionBD.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                estadisticas.add(mapearEstadisticas(rs));
+                estadisticas.add(mapearEstadistica(rs));
             }
-            return estadisticas;
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
+
+        return estadisticas;
     }
 
     @Override
-    public boolean insertar(EstadisticasRendimiento estadisticas) throws SQLException {
-        String sql = "INSERT INTO " + TABLA + " (id, entidad_id, tipo_entidad, total_carreras, " +
-                "victorias, colocaciones, promedio_tiempo, porcentaje_victorias) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    public boolean save(EstadisticasRendimiento estadistica) throws SQLException {
+        String sql = String.format("INSERT INTO %s (idEstadistica, caballo_id, jinete_id, totalCarreras, victorias, " +
+                "colocaciones, promedioTiempo, porcentajeVictorias) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", TABLA);
 
-        Connection conn = null;
-        PreparedStatement stmt = null;
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setString(1, estadisticas.getidparticipante());
-            stmt.setString(2, estadisticas.getEntidadId());
-            stmt.setString(3, estadisticas.getTipoEntidad());
-            stmt.setInt(4, estadisticas.getTotalCarreras());
-            stmt.setInt(5, estadisticas.getVictorias());
-            stmt.setInt(6, estadisticas.getColocaciones());
-            stmt.setTime(7, estadisticas.getPromedioTiempo() != null ?
-                    Time.valueOf(estadisticas.getPromedioTiempo()) : null);
-            stmt.setDouble(8, estadisticas.getPorcentajeVictorias());
-
+            configurarStatement(stmt, estadistica);
             return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
         }
     }
 
     @Override
-    public boolean actualizar(EstadisticasRendimiento estadisticas) throws SQLException {
-        String sql = "UPDATE " + TABLA + " SET total_carreras = ?, victorias = ?, colocaciones = ?, " +
-                "promedio_tiempo = ?, porcentaje_victorias = ? WHERE id = ?";
+    public boolean update(EstadisticasRendimiento estadistica) throws SQLException {
+        String sql = String.format("UPDATE %s SET caballo_id = ?, jinete_id = ?, totalCarreras = ?, victorias = ?, " +
+                "colocaciones = ?, promedioTiempo = ?, porcentajeVictorias = ? WHERE idEstadistica = ?", TABLA);
 
-        Connection conn = null;
-        PreparedStatement stmt = null;
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-
-            stmt.setInt(1, estadisticas.getTotalCarreras());
-            stmt.setInt(2, estadisticas.getVictorias());
-            stmt.setInt(3, estadisticas.getColocaciones());
-            stmt.setTime(4, estadisticas.getPromedioTiempo() != null ?
-                    Time.valueOf(estadisticas.getPromedioTiempo()) : null);
-            stmt.setDouble(5, estadisticas.getPorcentajeVictorias());
-            stmt.setString(6, estadisticas.getId());
-
+            configurarStatement(stmt, estadistica);
+            stmt.setString(8, estadistica.getIdEstadistica());
             return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
         }
     }
 
     @Override
-    public boolean eliminar(String id) throws SQLException {
-        String sql = "DELETE FROM " + TABLA + " WHERE id = ?";
-        Connection conn = null;
-        PreparedStatement stmt = null;
+    public boolean delete(String id) throws SQLException {
+        String sql = String.format("DELETE FROM %s WHERE idEstadistica = ?", TABLA);
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
             stmt.setString(1, id);
-
             return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
         }
     }
 
-    // Método específico para obtener estadísticas por entidad (caballo o jinete)
-    public Optional<EstadisticasRendimiento> obtenerPorEntidad(String entidadId, String tipoEntidad) throws SQLException {
-        String sql = "SELECT * FROM " + TABLA + " WHERE entidad_id = ? AND tipo_entidad = ?";
-        Connection conn = null;
-        PreparedStatement stmt = null;
-        ResultSet rs = null;
+    // Métodos adicionales específicos para EstadisticasRendimiento
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, entidadId);
-            stmt.setString(2, tipoEntidad);
-            rs = stmt.executeQuery();
+    public Optional<EstadisticasRendimiento> getByCaballoId(String caballoId) throws SQLException {
+        String sql = String.format("SELECT * FROM %s WHERE caballo_id = ?", TABLA);
+        EstadisticasRendimiento estadistica = null;
 
-            if (rs.next()) {
-                return Optional.of(mapearEstadisticas(rs));
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, caballoId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    estadistica = mapearEstadistica(rs);
+                }
             }
-            return Optional.empty();
-        } finally {
-            cerrarRecursos(conn, stmt, rs);
         }
+
+        return Optional.ofNullable(estadistica);
     }
 
-    // Método para eliminar estadísticas por entidad
-    public boolean eliminarPorEntidad(String entidadId, String tipoEntidad) throws SQLException {
-        String sql = "DELETE FROM " + TABLA + " WHERE entidad_id = ? AND tipo_entidad = ?";
-        Connection conn = null;
-        PreparedStatement stmt = null;
+    public Optional<EstadisticasRendimiento> getByJineteId(String jineteId) throws SQLException {
+        String sql = String.format("SELECT * FROM %s WHERE jinete_id = ?", TABLA);
+        EstadisticasRendimiento estadistica = null;
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, entidadId);
-            stmt.setString(2, tipoEntidad);
+        try (Connection conn = ConexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
+            stmt.setString(1, jineteId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    estadistica = mapearEstadistica(rs);
+                }
+            }
         }
+
+        return Optional.ofNullable(estadistica);
     }
 
-    // Método para actualizar estadísticas basado en el historial de carreras
-    public boolean actualizarDesdeHistorial(String entidadId, String tipoEntidad) throws SQLException {
-        String columnaFiltro = tipoEntidad.equals("CABALLO") ? "caballo_id" : "jinete_id";
+    // Métodos auxiliares
 
-        String sql = """
-        INSERT INTO estadisticas_rendimiento (id, entidad_id, tipo_entidad, total_carreras, victorias, colocaciones, porcentaje_victorias)
-        SELECT 
-            CONCAT(?, '_STATS'),
-            ?,
-            ?,
-            COUNT(*) as total_carreras,
-            SUM(CASE WHEN posicion = 1 THEN 1 ELSE 0 END) as victorias,
-            SUM(CASE WHEN posicion <= 3 THEN 1 ELSE 0 END) as colocaciones,
-            CASE 
-                WHEN COUNT(*) = 0 THEN 0 
-                ELSE (SUM(CASE WHEN posicion = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) 
-            END as porcentaje_victorias
-        FROM historial_carreras
-        WHERE """ + columnaFiltro + """ = ?
-        ON DUPLICATE KEY UPDATE 
-            total_carreras = VALUES(total_carreras), 
-            victorias = VALUES(victorias), 
-            colocaciones = VALUES(colocaciones), 
-            porcentaje_victorias = VALUES(porcentaje_victorias)
-        """;
+    private EstadisticasRendimiento mapearEstadistica(ResultSet rs) throws SQLException {
+        EstadisticasRendimiento estadistica = new EstadisticasRendimiento();
 
-        Connection conn = null;
-        PreparedStatement stmt = null;
+        estadistica.setIdEstadistica(rs.getString("idEstadistica"));
+        estadistica.setIdEntidad(rs.getString("caballo_id") != null ? rs.getString("caballo_id") : rs.getString("jinete_id"));
+        estadistica.setTipoEntidad(rs.getString("caballo_id") != null ? "CABALLO" : "JINETE");
+        estadistica.setTotalCarreras(rs.getInt("totalCarreras"));
+        estadistica.setVictorias(rs.getInt("victorias"));
+        estadistica.setColocaciones(rs.getInt("colocaciones"));
+        estadistica.setPromedioTiempo(rs.getTime("promedioTiempo") != null ? rs.getTime("promedioTiempo").toLocalTime() : null);
+        estadistica.setPorcentajeVictorias(rs.getDouble("porcentajeVictorias"));
 
-        try {
-            conn = obtenerConexion();
-            stmt = conn.prepareStatement(sql);
-            stmt.setString(1, entidadId);  // Para CONCAT
-            stmt.setString(2, entidadId);  // Para entidad_id
-            stmt.setString(3, tipoEntidad); // Para tipo_entidad
-            stmt.setString(4, entidadId);  // Para WHERE clause
-
-            return stmt.executeUpdate() > 0;
-        } finally {
-            cerrarRecursos(conn, stmt, null);
-        }
+        return estadistica;
     }
 
-    private EstadisticasRendimiento mapearEstadisticas(ResultSet rs) throws SQLException {
-        EstadisticasRendimiento stats = new EstadisticasRendimiento();
-        stats.setId(rs.getString("id"));
-        stats.setEntidadId(rs.getString("entidad_id"));
-        stats.setTipoEntidad(rs.getString("tipo_entidad"));
-        stats.setTotalCarreras(rs.getInt("total_carreras"));
-        stats.setVictorias(rs.getInt("victorias"));
-        stats.setColocaciones(rs.getInt("colocaciones"));
+    private void configurarStatement(PreparedStatement stmt, EstadisticasRendimiento estadistica) throws SQLException {
+        stmt.setString(1, estadistica.getIdEstadistica());
 
-        Time tiempo = rs.getTime("promedio_tiempo");
-        if (tiempo != null) {
-            stats.setPromedioTiempo(tiempo.toLocalTime());
+        if (estadistica.getTipoEntidad().equals("CABALLO")) {
+            stmt.setString(2, estadistica.getIdEntidad());
+            stmt.setNull(3, Types.VARCHAR);
+        } else {
+            stmt.setNull(2, Types.VARCHAR);
+            stmt.setString(3, estadistica.getIdEntidad());
         }
 
-        stats.setPorcentajeVictorias(rs.getDouble("porcentaje_victorias"));
+        stmt.setInt(4, estadistica.getTotalCarreras());
+        stmt.setInt(5, estadistica.getVictorias());
+        stmt.setInt(6, estadistica.getColocaciones());
 
-        return stats;
+        if (estadistica.getPromedioTiempo() != null) {
+            stmt.setTime(7, Time.valueOf(estadistica.getPromedioTiempo()));
+        } else {
+            stmt.setNull(7, Types.TIME);
+        }
+
+        stmt.setDouble(8, estadistica.getPorcentajeVictorias());
     }
 }

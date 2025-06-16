@@ -1,9 +1,13 @@
 package mx.uv.feaa.model.entidades;
 
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+
+
 
 public class Criador extends Usuario {
     private String licenciaCriador;
@@ -25,7 +29,7 @@ public class Criador extends Usuario {
 
     // Constructor básico
     public Criador(String nombreUsuario, String email) {
-        super(nombreUsuario, email);
+        puedeRegistrarCaballos();
         this.caballos = new ArrayList<>();
         this.caballosRegistrados = 0;
         this.caballosActivos = 0;
@@ -70,13 +74,12 @@ public class Criador extends Usuario {
             return false;
         }
 
-        // ESTABLECER RELACIÓN BIDIRECCIONAL
-        caballo.setCriador(this);
         caballos.add(caballo);
         caballosRegistrados++;
         actualizarContadorActivos();
         return true;
     }
+
     // Actualizar información de un caballo existente
     public boolean actualizarInfoCaballo(Caballo caballo) {
         if (caballo == null || !validarLicencia() || !isActivo()) {
@@ -84,9 +87,7 @@ public class Criador extends Usuario {
         }
 
         for (int i = 0; i < caballos.size(); i++) {
-            if (caballos.get(i).getIdCaballo().equals(caballo.getIdCaballo())) {
-                // ACTUALIZAR RELACIÓN BIDIRECCIONAL
-                caballo.setCriador(this);
+            if (caballos.get(i).equals(caballo)) {
                 caballos.set(i, caballo);
                 actualizarContadorActivos();
                 return true;
@@ -248,11 +249,6 @@ public class Criador extends Usuario {
         this.caballosRegistrados = this.caballos.size();
         actualizarContadorActivos();
     }
-    public void setCaballosRegistrados(int caballosRegistrados) {
-        this.caballosRegistrados = caballosRegistrados;
-    }
-
-
 
     public String getDireccion() {
         return direccion;

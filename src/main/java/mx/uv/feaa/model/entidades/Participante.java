@@ -130,4 +130,8 @@ public class Participante {
     public int hashCode() {
         return Integer.hashCode(numeroCompetidor);
     }
+
+
+    public void setCarrera(Carrera carreraId) {
+    }
 }

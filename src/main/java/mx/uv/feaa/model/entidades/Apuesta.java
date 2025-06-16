@@ -2,6 +2,7 @@ package mx.uv.feaa.model.entidades;
 
 import mx.uv.feaa.enumeracion.EstadoApuesta;
 import mx.uv.feaa.enumeracion.TipoApuesta;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ public abstract class Apuesta {
     protected Map<String, Object> seleccion;
     protected double cuotaAplicada;
     protected double montoGanado;
+    private Usuario apostador;
 
     public Apuesta(String idApuesta, String idUsuario, String idCarrera,
                    TipoApuesta tipoApuesta, double montoApostado) {
@@ -98,8 +100,6 @@ public abstract class Apuesta {
                 montoApostado, estado != null ? estado.getDescripcion() : "N/A", fechaApuesta);
     }
 
-
-
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -111,5 +111,9 @@ public abstract class Apuesta {
     @Override
     public int hashCode() {
         return idApuesta != null ? idApuesta.hashCode() : 0;
+    }
+
+    public Usuario getApostador() {
+        return apostador;
     }
 }

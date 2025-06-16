@@ -1,6 +1,5 @@
 package mx.uv.feaa.model.dao;
 
-
 import mx.uv.feaa.model.entidades.Usuario;
 import mx.uv.feaa.util.ConexionBD;
 
@@ -10,21 +9,19 @@ import java.util.List;
 import java.util.Optional;
 
 public class UsuarioDAO implements IGenericDAO<Usuario, String> {
-    private static final String TABLE = "Usuario";
-    private static final String[] COLUMNS = {
-            "idUsuario", "nombreUsuario", "email", "password",
-            "activo", "fechaRegistro", "ultimoAcceso", "tipoUsuario"
-    };
+    private static final String TABLE_NAME = "Usuario";
+    private static final String ID_COLUMN = "idUsuario";
 
     @Override
     public Optional<Usuario> getById(String id) throws SQLException {
-        final String SQL = "SELECT * FROM " + TABLE + " WHERE idUsuario = ?";
+        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE " + ID_COLUMN + " = ?";
 
         try (Connection conn = ConexionBD.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, id);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            stmt.setString(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapearUsuario(rs));
                 }
@@ -36,11 +33,11 @@ public class UsuarioDAO implements IGenericDAO<Usuario, String> {
     @Override
     public List<Usuario> getAll() throws SQLException {
         List<Usuario> usuarios = new ArrayList<>();
-        final String SQL = "SELECT * FROM " + TABLE;
+        String sql = "SELECT * FROM " + TABLE_NAME;
 
         try (Connection conn = ConexionBD.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(SQL)) {
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
                 usuarios.add(mapearUsuario(rs));
@@ -51,74 +48,62 @@ public class UsuarioDAO implements IGenericDAO<Usuario, String> {
 
     @Override
     public boolean save(Usuario usuario) throws SQLException {
-        final String SQL = "INSERT INTO " + TABLE + " (" +
-                String.join(", ", COLUMNS) + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + TABLE_NAME + " (idUsuario, nombreUsuario, email, password, activo, tipoUsuario) " +
+                "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = ConexionBD.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, usuario.getIdUsuario());
-            pstmt.setString(2, usuario.getNombreUsuario());
-            pstmt.setString(3, usuario.getEmail());
-            pstmt.setString(4, usuario.getPassword());
-            pstmt.setBoolean(5, usuario.isActivo());
-            pstmt.setTimestamp(6, Timestamp.valueOf(usuario.getFechaRegistro()));
+            stmt.setString(1, usuario.getIdUsuario());
+            stmt.setString(2, usuario.getNombreUsuario());
+            stmt.setString(3, usuario.getEmail());
+            stmt.setString(4, usuario.getPassword());
+            stmt.setBoolean(5, usuario.isActivo());
+            stmt.setString(6, usuario.getTipoUsuario());
 
-            Timestamp ultimoAcceso = usuario.getUltimoAcceso() != null ?
-                    Timestamp.valueOf(usuario.getUltimoAcceso()) : null;
-            pstmt.setTimestamp(7, ultimoAcceso);
-
-            pstmt.setString(8, usuario.getTipoUsuario());
-
-            return pstmt.executeUpdate() > 0;
+            return stmt.executeUpdate() > 0;
         }
     }
 
     @Override
     public boolean update(Usuario usuario) throws SQLException {
-        final String SQL = "UPDATE " + TABLE + " SET " +
-                "nombreUsuario = ?, email = ?, password = ?, activo = ?, " +
-                "ultimoAcceso = ?, tipoUsuario = ? WHERE idUsuario = ?";
+        String sql = "UPDATE " + TABLE_NAME + " SET nombreUsuario = ?, email = ?, password = ?, activo = ? " +
+                "WHERE " + ID_COLUMN + " = ?";
 
         try (Connection conn = ConexionBD.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, usuario.getNombreUsuario());
-            pstmt.setString(2, usuario.getEmail());
-            pstmt.setString(3, usuario.getPassword());
-            pstmt.setBoolean(4, usuario.isActivo());
+            stmt.setString(1, usuario.getNombreUsuario());
+            stmt.setString(2, usuario.getEmail());
+            stmt.setString(3, usuario.getPassword());
+            stmt.setBoolean(4, usuario.isActivo());
+            stmt.setString(5, usuario.getIdUsuario());
 
-            Timestamp ultimoAcceso = usuario.getUltimoAcceso() != null ?
-                    Timestamp.valueOf(usuario.getUltimoAcceso()) : null;
-            pstmt.setTimestamp(5, ultimoAcceso);
-
-            pstmt.setString(6, usuario.getTipoUsuario());
-            pstmt.setString(7, usuario.getIdUsuario());
-
-            return pstmt.executeUpdate() > 0;
+            return stmt.executeUpdate() > 0;
         }
     }
 
     @Override
     public boolean delete(String id) throws SQLException {
-        final String SQL = "DELETE FROM " + TABLE + " WHERE idUsuario = ?";
+        String sql = "DELETE FROM " + TABLE_NAME + " WHERE " + ID_COLUMN + " = ?";
 
         try (Connection conn = ConexionBD.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, id);
-            return pstmt.executeUpdate() > 0;
+            stmt.setString(1, id);
+            return stmt.executeUpdate() > 0;
         }
     }
 
-    public Optional<Usuario> getByUsername(String username) throws SQLException {
-        final String SQL = "SELECT * FROM " + TABLE + " WHERE nombreUsuario = ?";
+    public Optional<Usuario> buscarPorNombreUsuario(String nombreUsuario) throws SQLException {
+        String sql = "SELECT * FROM " + TABLE_NAME + " WHERE nombreUsuario = ?";
 
         try (Connection conn = ConexionBD.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(SQL)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, username);
-            try (ResultSet rs = pstmt.executeQuery()) {
+            stmt.setString(1, nombreUsuario);
+
+            try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapearUsuario(rs));
                 }
@@ -128,27 +113,23 @@ public class UsuarioDAO implements IGenericDAO<Usuario, String> {
     }
 
     private Usuario mapearUsuario(ResultSet rs) throws SQLException {
-        Usuario usuario = new Usuario() {
+        Usuario usuario = new Usuario(
+                rs.getString(ID_COLUMN),
+                rs.getString("nombreUsuario"),
+                rs.getString("email"),
+                rs.getString("password")
+        ) {
             @Override
             public String getTipoUsuarioEspecifico() {
-                try {
-                    return rs.getString("tipoUsuario");
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
+                return "";
             }
         };
 
-        usuario.setIdUsuario(rs.getString("idUsuario"));
-        usuario.setNombreUsuario(rs.getString("nombreUsuario"));
-        usuario.setEmail(rs.getString("email"));
-        usuario.setPassword(rs.getString("password"));
         usuario.setActivo(rs.getBoolean("activo"));
         usuario.setFechaRegistro(rs.getTimestamp("fechaRegistro").toLocalDateTime());
 
-        Timestamp ultimoAcceso = rs.getTimestamp("ultimoAcceso");
-        if (ultimoAcceso != null) {
-            usuario.setUltimoAcceso(ultimoAcceso.toLocalDateTime());
+        if (rs.getTimestamp("ultimoAcceso") != null) {
+            usuario.setUltimoAcceso(rs.getTimestamp("ultimoAcceso").toLocalDateTime());
         }
 
         usuario.setTipoUsuario(rs.getString("tipoUsuario"));
