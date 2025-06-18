@@ -4,6 +4,7 @@ import mx.uv.feaa.model.entidades.Apuesta;
 import mx.uv.feaa.model.entidades.ApuestaGanador;
 import mx.uv.feaa.enumeracion.EstadoApuesta;
 import mx.uv.feaa.enumeracion.TipoApuesta;
+import mx.uv.feaa.model.entidades.ApuestaSeleccion;
 import mx.uv.feaa.util.ConexionBD;
 import java.sql.*;
 import java.util.ArrayList;
@@ -203,5 +204,72 @@ public class ApuestaDAO implements IGenericDAO<Apuesta, String> {
         }
 
         return apuestas;
+    }
+    public boolean saveWithSelections(Apuesta apuesta, List<ApuestaSeleccion> selecciones) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = ConexionBD.getConnection();
+            conn.setAutoCommit(false);  // Iniciar transacción
+
+            // 1. Guardar la apuesta principal
+            if (!save(apuesta)) {
+                conn.rollback();
+                return false;
+            }
+
+            // 2. Guardar las selecciones
+            ApuestaSeleccionDAO seleccionDAO = new ApuestaSeleccionDAO();
+            for (ApuestaSeleccion seleccion : selecciones) {
+                if (!seleccionDAO.save(seleccion)) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);  // Restaurar auto-commit
+                conn.close();
+            }
+        }
+    }
+
+    public boolean updateWithSelections(Apuesta apuesta, List<ApuestaSeleccion> selecciones) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = ConexionBD.getConnection();
+            conn.setAutoCommit(false);
+
+            // 1. Actualizar apuesta principal
+            if (!update(apuesta)) {
+                conn.rollback();
+                return false;
+            }
+
+            // 2. Eliminar selecciones antiguas
+            ApuestaSeleccionDAO seleccionDAO = new ApuestaSeleccionDAO();
+            if (!seleccionDAO.deleteByApuestaId(apuesta.getId())) {
+                conn.rollback();
+                return false;
+            }
+
+            // 3. Guardar nuevas selecciones
+            for (ApuestaSeleccion seleccion : selecciones) {
+                if (!seleccionDAO.save(seleccion)) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit();
+            return true;
+        } finally {
+            if (conn != null) {
+                conn.setAutoCommit(true);
+                conn.close();
+            }
+        }
     }
 }
