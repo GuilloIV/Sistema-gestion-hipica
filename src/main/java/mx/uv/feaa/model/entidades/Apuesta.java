@@ -4,7 +4,9 @@ import mx.uv.feaa.enumeracion.EstadoApuesta;
 import mx.uv.feaa.enumeracion.TipoApuesta;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class Apuesta {
@@ -16,6 +18,7 @@ public abstract class Apuesta {
     protected EstadoApuesta estado;
     protected TipoApuesta tipoApuesta;
     protected Map<String, Object> seleccion;
+    protected List<ApuestaSeleccion> selecciones;
     protected double cuotaAplicada;
     protected double montoGanado;
     private Usuario apostador;
@@ -29,7 +32,8 @@ public abstract class Apuesta {
         this.montoApostado = montoApostado;
         this.fechaApuesta = LocalDateTime.now();
         this.estado = EstadoApuesta.PENDIENTE;
-        this.seleccion = new HashMap<>();
+        this.seleccion = new HashMap<>(); // Corregido: era new ApuestaSeleccion<>()
+        this.selecciones = new ArrayList<>();
         this.cuotaAplicada = 0.0;
         this.montoGanado = 0.0;
     }
@@ -84,10 +88,30 @@ public abstract class Apuesta {
     public void setEstado(EstadoApuesta estado) { this.estado = estado; }
     public TipoApuesta getTipoApuesta() { return tipoApuesta; }
     public void setTipoApuesta(TipoApuesta tipoApuesta) { this.tipoApuesta = tipoApuesta; }
+
+    // Getters y setters para HashMap (mantener como estaba)
     public Map<String, Object> getSeleccion() { return new HashMap<>(seleccion); }
     public void setSeleccion(Map<String, Object> seleccion) {
         this.seleccion = seleccion != null ? new HashMap<>(seleccion) : new HashMap<>();
     }
+
+
+    // Nuevos getters y setters para la Lista
+    public List<ApuestaSeleccion> getSelecciones() {
+        return new ArrayList<>(selecciones);
+    }
+    public void setSelecciones(List<ApuestaSeleccion> selecciones) {
+        this.selecciones = selecciones != null ? new ArrayList<>(selecciones) : new ArrayList<>();
+    }
+    public void agregarSeleccion(ApuestaSeleccion seleccion) {
+        if (seleccion != null) {
+            this.selecciones.add(seleccion);
+        }
+    }
+    public boolean removerSeleccion(ApuestaSeleccion seleccion) {
+        return this.selecciones.remove(seleccion);
+    }
+
     public double getCuotaAplicada() { return cuotaAplicada; }
     public void setCuotaAplicada(double cuotaAplicada) { this.cuotaAplicada = cuotaAplicada; }
     public double getMontoGanado() { return montoGanado; }

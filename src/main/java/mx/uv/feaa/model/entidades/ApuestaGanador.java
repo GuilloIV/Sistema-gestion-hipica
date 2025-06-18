@@ -1,9 +1,6 @@
 package mx.uv.feaa.model.entidades;
 
 import mx.uv.feaa.enumeracion.TipoApuesta;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 public class ApuestaGanador extends Apuesta {
     public ApuestaGanador(String idApuesta, String idUsuario, String idCarrera,

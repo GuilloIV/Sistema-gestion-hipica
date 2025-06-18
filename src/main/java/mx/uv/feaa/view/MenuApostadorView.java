@@ -1,14 +1,19 @@
 package mx.uv.feaa.view;
 
+import mx.uv.feaa.enumeracion.EstadoCarrera;
+import mx.uv.feaa.enumeracion.TipoApuesta;
 import mx.uv.feaa.model.dao.ApuestaDAO;
 import mx.uv.feaa.model.dao.ApostadorDAO;
-import mx.uv.feaa.model.entidades.Apostador;
-import mx.uv.feaa.model.entidades.Apuesta;
+import mx.uv.feaa.model.dao.CarreraDAO;
+import mx.uv.feaa.model.dao.ParticipanteDAO;
+import mx.uv.feaa.model.entidades.*;
 import mx.uv.feaa.enumeracion.EstadoApuesta;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.UUID;
 
 public class MenuApostadorView {
     private final Scanner scanner;
@@ -45,6 +50,9 @@ public class MenuApostadorView {
                 case "4":
                     realizarRetiro();
                     break;
+                case "5":
+                    realizarApuesta();
+                    break;
                 case "0":
                     System.out.println("Cerrando sesión...");
                     return;
@@ -66,9 +74,116 @@ public class MenuApostadorView {
         System.out.println("2. Ver mis apuestas");
         System.out.println("3. Realizar depósito");
         System.out.println("4. Realizar retiro");
+        System.out.println("5. Realizar apuesta");
         System.out.println("0. Cerrar sesión");
         System.out.println("=".repeat(40));
         System.out.print("Seleccione una opción: ");
+    }
+
+    private void realizarApuesta() {
+        System.out.println("\n=== REALIZAR APUESTA ===");
+
+        try {
+            CarreraDAO carreraDAO = new CarreraDAO();
+            List<Carrera> carreras = carreraDAO.getByEstado(EstadoCarrera.APUESTAS_ABIERTAS);
+
+            if (carreras.isEmpty()) {
+                System.out.println("No hay carreras disponibles para apostar");
+                return;
+            }
+
+            // Mostrar carreras disponibles
+            System.out.println("\nCARRERAS DISPONIBLES:");
+            for (int i = 0; i < carreras.size(); i++) {
+                Carrera c = carreras.get(i);
+                System.out.printf("%d. %s - %s - %s%n",
+                        i+1, c.getNombre(), c.getFecha(), c.getHora());
+            }
+
+            // Seleccionar carrera
+            System.out.print("\nSeleccione una carrera: ");
+            int opcionCarrera = Integer.parseInt(scanner.nextLine()) - 1;
+            Carrera carrera = carreras.get(opcionCarrera);
+
+            // Mostrar participantes
+            ParticipanteDAO participanteDAO = new ParticipanteDAO();
+            List<Participante> participantes = participanteDAO.getByCarreraId(carrera.getIdCarrera());
+
+            System.out.println("\nPARTICIPANTES:");
+            for (Participante p : participantes) {
+                System.out.printf("#%d - %s (Caballo: %s)%n",
+                        p.getNumeroCompetidor(),
+                        p.getJinete().getNombre(),
+                        p.getCaballo().getNombre());
+            }
+
+            // Seleccionar tipo de apuesta
+            System.out.println("\nTIPOS DE APUESTA:");
+            System.out.println("1. Ganador");
+            System.out.println("2. Colocado (primero, segundo o tercero)");
+            System.out.print("Seleccione tipo: ");
+            int tipoApuesta = Integer.parseInt(scanner.nextLine());
+
+            // Crear apuesta
+            Apuesta apuesta = new ApuestaGanador(
+                    UUID.randomUUID().toString(),
+                    apostador.getIdUsuario(),
+                    carrera.getIdCarrera(),
+                    (tipoApuesta == 1) ? TipoApuesta.GANADOR : TipoApuesta.COLOCADO,
+                    0 // Monto temporal
+            );
+
+            // Seleccionar participantes
+            List<ApuestaSeleccion> selecciones = new ArrayList<>();
+            System.out.print("\nIngrese número del participante: ");
+            int numParticipante = Integer.parseInt(scanner.nextLine());
+
+            // Buscar participante seleccionado
+            Participante participanteSeleccionado = participantes.stream()
+                    .filter(p -> p.getNumeroCompetidor() == numParticipante)
+                    .findFirst()
+                    .orElse(null);
+
+            if (participanteSeleccionado == null) {
+                System.out.println("Participante no válido");
+                return;
+            }
+
+            selecciones.add(new ApuestaSeleccion(
+                    UUID.randomUUID().toString(),
+                    apuesta.getId(),
+                    participanteSeleccionado.getIdParticipante(),
+                    1
+            ));
+
+            // Monto de apuesta
+            System.out.print("\nMonto a apostar (mínimo $10.00): $");
+            double monto = Double.parseDouble(scanner.nextLine());
+
+            if (monto < 10.0 || monto > apostador.getSaldo()) {
+                System.out.println("Monto inválido o saldo insuficiente");
+                return;
+            }
+
+            apuesta.setMontoApostado(monto);
+
+            // Guardar apuesta
+            ApuestaDAO apuestaDAO = new ApuestaDAO();
+            if (apuestaDAO.saveWithSelections(apuesta, selecciones)) {
+                // Actualizar saldo
+                double nuevoSaldo = apostador.getSaldo() - monto;
+                apostadorDAO.actualizarSaldo(apostador.getIdUsuario(), nuevoSaldo);
+                apostador.setSaldo(nuevoSaldo);
+
+                System.out.printf("\n✅ Apuesta realizada exitosamente! ID: %s%n", apuesta.getId());
+                System.out.printf("Nuevo saldo: $%.2f%n", nuevoSaldo);
+            } else {
+                System.out.println("Error al registrar apuesta");
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error: " + e.getMessage());
+        }
     }
 
     private void consultarSaldo() {
