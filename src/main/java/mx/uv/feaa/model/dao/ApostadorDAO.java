@@ -9,10 +9,46 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Implementación concreta de {@link IGenericDAO} para la entidad {@link Apostador}.
+ * Esta clase proporciona operaciones CRUD (Crear, Leer, Actualizar, Eliminar)
+ * para gestionar los apostadores en el sistema, interactuando con la base de datos.
+ * <p>
+ * La clase maneja tanto los datos básicos de {@link Usuario} como los específicos
+ * de {@link Apostador}, manteniendo la integridad referencial entre ambas tablas.
+ * </p>
+ *
+ * @author [Nombre del autor o equipo]
+ * @version 1.0
+ * @since 1.0
+ * @see IGenericDAO
+ * @see Apostador
+ * @see Usuario
+ * @see UsuarioDAO
+ */
 public class ApostadorDAO implements IGenericDAO<Apostador, String> {
+    /**
+     * Nombre de la tabla de Apostadores en la base de datos.
+     */
     private static final String TABLE_NAME = "Apostador";
+
+    /**
+     * Nombre de la columna que actúa como clave primaria.
+     */
     private static final String ID_COLUMN = "idUsuario";
 
+    /**
+     * Recupera un apostador específico de la base de datos usando su ID.
+     * Realiza un JOIN con la tabla Usuario para obtener todos los datos relacionados.
+     *
+     * @param id el identificador único del apostador (corresponde a idUsuario)
+     * @return un {@link Optional} que contiene el {@link Apostador} si se encuentra,
+     *         o vacío si no existe un apostador con ese ID
+     * @throws SQLException si ocurre algún error al acceder a la base de datos,
+     *         incluyendo problemas de conexión o errores en la consulta SQL
+     * @see Optional
+     * @see Apostador
+     */
     @Override
     public Optional<Apostador> getById(String id) throws SQLException {
         String sql = "SELECT u.*, a.* FROM " + TABLE_NAME + " a " +
@@ -33,6 +69,17 @@ public class ApostadorDAO implements IGenericDAO<Apostador, String> {
         return Optional.empty();
     }
 
+    /**
+     * Recupera todos los apostadores registrados en el sistema.
+     * Realiza un JOIN con la tabla Usuario para obtener los datos completos.
+     *
+     * @return una {@link List} de {@link Apostador} con todos los apostadores,
+     *         o una lista vacía si no hay registros
+     * @throws SQLException si ocurre algún error al acceder a la base de datos,
+     *         incluyendo problemas de conexión o errores en la consulta SQL
+     * @see List
+     * @see Apostador
+     */
     @Override
     public List<Apostador> getAll() throws SQLException {
         List<Apostador> apostadores = new ArrayList<>();
@@ -50,6 +97,22 @@ public class ApostadorDAO implements IGenericDAO<Apostador, String> {
         return apostadores;
     }
 
+    /**
+     * Guarda un nuevo apostador en la base de datos.
+     * <p>
+     * Este método realiza dos operaciones:
+     * 1. Guarda los datos básicos en la tabla Usuario a través de {@link UsuarioDAO}
+     * 2. Guarda los datos específicos del apostador en la tabla Apostador
+     * </p>
+     *
+     * @param apostador el objeto {@link Apostador} a persistir en la base de datos
+     * @return true si la operación se completó con éxito, false si falló
+     * @throws SQLException si ocurre algún error al acceder a la base de datos,
+     *         incluyendo problemas de conexión, violación de restricciones únicas,
+     *         o errores en la consulta SQL
+     * @see Apostador
+     * @see UsuarioDAO
+     */
     @Override
     public boolean save(Apostador apostador) throws SQLException {
         // Primero guardamos el usuario base
@@ -75,6 +138,21 @@ public class ApostadorDAO implements IGenericDAO<Apostador, String> {
         }
     }
 
+    /**
+     * Actualiza los datos de un apostador existente.
+     * <p>
+     * Este método realiza dos operaciones:
+     * 1. Actualiza los datos básicos en la tabla Usuario a través de {@link UsuarioDAO}
+     * 2. Actualiza los datos específicos del apostador en la tabla Apostador
+     * </p>
+     *
+     * @param apostador el objeto {@link Apostador} con los datos actualizados
+     * @return true si la operación se completó con éxito, false si falló
+     * @throws SQLException si ocurre algún error al acceder a la base de datos,
+     *         incluyendo problemas de conexión o errores en la consulta SQL
+     * @see Apostador
+     * @see UsuarioDAO
+     */
     @Override
     public boolean update(Apostador apostador) throws SQLException {
         // Actualizamos primero el usuario base
@@ -100,6 +178,20 @@ public class ApostadorDAO implements IGenericDAO<Apostador, String> {
         }
     }
 
+    /**
+     * Elimina un apostador de la base de datos.
+     * <p>
+     * Este método aprovecha la relación DELETE CASCADE configurada en la base de datos,
+     * por lo que solo necesita eliminar el registro de Usuario y automáticamente
+     * se eliminarán los registros relacionados en la tabla Apostador.
+     * </p>
+     *
+     * @param id el identificador único del apostador a eliminar
+     * @return true si la operación se completó con éxito, false si falló
+     * @throws SQLException si ocurre algún error al acceder a la base de datos,
+     *         incluyendo problemas de conexión o errores en la consulta SQL
+     * @see UsuarioDAO
+     */
     @Override
     public boolean delete(String id) throws SQLException {
         // Al tener DELETE CASCADE en la FK, solo necesitamos borrar el usuario
@@ -107,6 +199,15 @@ public class ApostadorDAO implements IGenericDAO<Apostador, String> {
         return usuarioDAO.delete(id);
     }
 
+    /**
+     * Actualiza el saldo de un apostador específico.
+     *
+     * @param idUsuario el identificador único del apostador
+     * @param nuevoSaldo el nuevo valor del saldo a establecer
+     * @return true si la operación se completó con éxito, false si falló
+     * @throws SQLException si ocurre algún error al acceder a la base de datos,
+     *         incluyendo problemas de conexión o errores en la consulta SQL
+     */
     public boolean actualizarSaldo(String idUsuario, double nuevoSaldo) throws SQLException {
         String sql = "UPDATE " + TABLE_NAME + " SET saldo = ? WHERE " + ID_COLUMN + " = ?";
 
@@ -120,6 +221,21 @@ public class ApostadorDAO implements IGenericDAO<Apostador, String> {
         }
     }
 
+    /**
+     * Convierte un registro de la base de datos (ResultSet) en un objeto {@link Apostador}.
+     * <p>
+     * Este método privado realiza el mapeo de:
+     * 1. Los datos básicos de {@link Usuario}
+     * 2. Los datos específicos de {@link Apostador}
+     * </p>
+     *
+     * @param rs el {@link ResultSet} que contiene los datos del apostador
+     * @return un objeto {@link Apostador} con todos los datos mapeados
+     * @throws SQLException si ocurre algún error al acceder a los datos del ResultSet
+     * @see ResultSet
+     * @see Apostador
+     * @see Usuario
+     */
     private Apostador mapearApostador(ResultSet rs) throws SQLException {
         // Mapear datos de Usuario
         Usuario usuario = new Usuario(

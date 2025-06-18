@@ -1,6 +1,7 @@
 mx.uv.feaa
 mx.uv.feaa.enumeracion
 mx.uv.feaa.excepciones
-mx.uv.feaa.model
-mx.uv.feaa.servicios
+mx.uv.feaa.model.dao
+mx.uv.feaa.model.entidades
 mx.uv.feaa.util
+mx.uv.feaa.view
