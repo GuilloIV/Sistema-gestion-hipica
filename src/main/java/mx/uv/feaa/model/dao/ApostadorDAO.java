@@ -18,7 +18,6 @@ import java.util.Optional;
  * de {@link Apostador}, manteniendo la integridad referencial entre ambas tablas.
  * </p>
  *
- * @author [Nombre del autor o equipo]
  * @version 1.0
  * @since 1.0
  * @see IGenericDAO
